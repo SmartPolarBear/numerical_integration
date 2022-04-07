@@ -252,6 +252,60 @@ def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsil
 
 \section{基准测试}
 
+为了测试龙贝格积分法的效果，以Matlab 2021b的积分值为真值、蒙特卡洛积分法和拟蒙特卡洛积分法为基线
+进行测试，计算积分$\int_0^{\frac{\pi}{2}}\cos x \dif x$和$\int_0^4\sqrt[4]{15x^3+21x^2+41x+3}\cdot e^{-0.5x}\dif x$。被积函数
+的图形如图~\ref{fig:funcs}
+
+\begin{figure}[H]
+	\centering 
+	\subfigure[函数$f(x)=\cos x$]{ 
+	  \includegraphics[width=0.48\textwidth]{func1.jpg} 
+	} 
+	~
+	\subfigure[函数$g(x)=(15x^3+21x^2+41x+3)^{\frac{1}{4}}\cdot e^{-0.5x}$]{ 
+	  \includegraphics[width=0.48\textwidth]{func2.jpg} 
+	} 
+	\caption{被积函数图象} 
+	\label{fig:funcs}
+\end{figure}
+
+调用本程序实现的龙贝格积分法函数，要求精度$0.0001$，迭代次数最多$128$次，可以得到每次迭代的
+积分值如图~\ref{fig:converg}。可以发现龙贝格积分法的收敛速度很快，约3至4次迭代即可得到
+和真实值相近的积分值。
+
+\begin{figure}[H]
+	\centering 
+	\subfigure[积分$\int_0^{\frac{\pi}{2}}f(x)\dif x$迭代过程]{ 
+	  \includegraphics[width=0.48\textwidth]{convergence1.png} 
+	} 
+	~
+	\subfigure[积分$\int_0^4g(x)\dif x$迭代过程]{ 
+	  \includegraphics[width=0.48\textwidth]{convergence2.png} 
+	} 
+	\caption{被积函数图象} 
+	\label{fig:converg}
+\end{figure}
+
+龙贝格积分法积分得出的数据如表~\ref{tbl:romberg}所示。在迭代次数$10$以内
+的条件下积分值的精确度已经达到了极高的水平，相对误差对于两个不同的函数均小于$0.001\%$。
+这说明了龙贝格法有良好的精度。
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{cccc}
+		\toprule
+		函数 & 测量值 & 真实值（以Matlab 2021b为基准） & 相对误差(\%) \\
+		\midrule
+		$f(x)$ & $0.9999874501175262$ & $1$ & $0.0012$ \\
+		$g(x)$ & $5.767412519408859$ & $5.767433490695931$ & $0.00036$ \\
+		\bottomrule
+	\end{tabular}
+	\caption{龙贝格积分法积分值}
+	\label{tbl:romberg}
+\end{table}
+
+
+
 \section{结论}
 
 导致龙贝格积分法的实现效率相对一般的原因可能是因为这个递推过程很难被向量化优化，
