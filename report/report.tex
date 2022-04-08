@@ -294,7 +294,7 @@ def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsil
 	\centering
 	\begin{tabular}{cccc}
 		\toprule
-		函数 & 测量值 & 真实值（以Matlab 2021b为基准） & 相对误差(\%) \\
+		函数 & 测量值 & 参考值（以Matlab 2021b为基准） & 相对误差(\%) \\
 		\midrule
 		$f(x)$ & $0.9999874501175262$ & $1$ & $0.0012$ \\
 		$g(x)$ & $5.767412519408859$ & $5.767433490695931$ & $0.00036$ \\
@@ -304,7 +304,45 @@ def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsil
 	\label{tbl:romberg}
 \end{table}
 
+为了测量该实现的运行效率，
 
+\begin{figure}[H]
+	\centering
+	\label{fig:rubtimeaverage}
+	\includegraphics[width=0.5\linewidth]{runtime.png}
+	\caption{平均运行时间}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	\subfigure[蒙特卡洛法500次分布]{ 
+	  \includegraphics[width=0.48\textwidth]{var_mc.png} 
+	} 
+	~
+	\subfigure[拟蒙特卡洛法500次分布]{ 
+	  \includegraphics[width=0.48\textwidth]{var_qmc.png} 
+	} 
+	~ 
+	\subfigure[同坐标系显示]{ 
+	  \includegraphics[width=0.48\textwidth]{var_all.png} 
+	} 
+	\caption{蒙特卡洛和拟蒙特卡罗的分布情况} 
+	\label{fig:variance}
+\end{figure}
+
+\begin{table}
+	\centering
+	\begin{tabular}{ccc}
+		\toprule
+		算法 & 均值 & 方差 \\
+		\midrule
+		蒙特卡洛法 & $5.766607543456825$ & $0.00018877067621830997$ \\
+		拟蒙特卡洛法 & $5.767433680428228$ & $1.0746874157286956\times 10^{-11}$ \\
+		\bottomrule
+	\end{tabular}
+	\label{tbl:var}
+	\caption{随机方法的均值与方差}
+\end{table}
 
 \section{结论}
 
