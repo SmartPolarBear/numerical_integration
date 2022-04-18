@@ -199,15 +199,13 @@
 
 \section{实现}
 
-\subsection{龙贝格积分法}
-
-龙贝格积分法是通过外推法不断使用梯形公式来提高计算精度的数值积分法，它在区间上取等距离的点。它的过程如下：
-
+龙贝格积分法是通过外推法不断使用梯形公式来提高计算精度的数值积分法。是一种常用的积分法，
+并且可以达到较高的精度。
 
 \subsection{文件结构}
 
-本程序实现了龙贝格积分以及用于基准测试和比较的蒙特卡洛积分法和拟蒙特卡洛（Quasi-Monte Carlo）积分法。
-主要文件和作用如表格~\ref{tbl:struct}所示。
+本程序实现了龙贝格积分以及用于基准测试和比较的蒙特卡洛积分法和
+拟蒙特卡洛（Quasi-Monte Carlo）积分法。主要文件和作用如表格~\ref{tbl:struct}所示。
 
 \begin{table}[htbp]
 	\centering
@@ -252,6 +250,8 @@ def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsil
 
 \section{基准测试}
 
+\subsection{积分准确度和收敛速度}
+
 为了测试龙贝格积分法的效果，以Matlab 2021b的积分值为真值、蒙特卡洛积分法和拟蒙特卡洛积分法为基线
 进行测试，计算积分$\int_0^{\frac{\pi}{2}}\cos x \dif x$和$\int_0^4\sqrt[4]{15x^3+21x^2+41x+3}\cdot e^{-0.5x}\dif x$。被积函数
 的图形如图~\ref{fig:funcs}
@@ -290,7 +290,7 @@ def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsil
 的条件下积分值的精确度已经达到了极高的水平，相对误差对于两个不同的函数均小于$0.001\%$。
 这说明了龙贝格法有良好的精度。
 
-\begin{table}[H]
+\begin{table}[htbp]
 	\centering
 	\begin{tabular}{cccc}
 		\toprule
@@ -304,33 +304,52 @@ def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsil
 	\label{tbl:romberg}
 \end{table}
 
-为了测量该实现的运行效率，
+\subsection{运行效率和比较}
 
-\begin{figure}[H]
+平均运行时间用于测量该实现的运行效率，通过1000次循环取平均值来规避偶然波动。结果如
+图~\ref{fig:rubtimeaverage}。可以发现龙贝格积分法的运行速度在函数本身不是非常复杂，
+但是当函数求值较为复杂时，龙贝格积分法在效率上比其他两者较慢。其中的一个原因可能是
+龙贝格法每轮迭代中函数求值发生的时间\emph{没有较强的时间上的局部性}。蒙特卡洛法
+和拟蒙特卡洛法对函数求值会在采样点得出之后一次完成，而龙贝格法会在每轮迭代中
+多次发生。
+
+\begin{figure}[htbp]
 	\centering
 	\label{fig:rubtimeaverage}
 	\includegraphics[width=0.5\linewidth]{runtime.png}
 	\caption{平均运行时间}
 \end{figure}
 
+\subsection{蒙特卡洛和拟蒙特卡洛法的性能}
+
+但是由于运行时间的差异实际上并不大，但这并不能否认龙贝格积分法是一个优秀的数值积分法。
+因为龙贝格积分发可以给出一个确定的解，它在任何情况下多次调用都是稳定的。如图~\ref{fig:variance}
+蒙特卡洛法具有一定的随机性，每次调用的值都分布在实际值附近，但是有所波动。
+
 \begin{figure}[H]
 	\centering 
 	\subfigure[蒙特卡洛法500次分布]{ 
-	  \includegraphics[width=0.48\textwidth]{var_mc.png} 
+	  \includegraphics[width=0.4\textwidth]{var_mc.png} 
 	} 
 	~
 	\subfigure[拟蒙特卡洛法500次分布]{ 
-	  \includegraphics[width=0.48\textwidth]{var_qmc.png} 
+	  \includegraphics[width=0.4\textwidth]{var_qmc.png} 
 	} 
 	~ 
 	\subfigure[同坐标系显示]{ 
-	  \includegraphics[width=0.48\textwidth]{var_all.png} 
+	  \includegraphics[width=0.4\textwidth]{var_all.png} 
 	} 
 	\caption{蒙特卡洛和拟蒙特卡罗的分布情况} 
 	\label{fig:variance}
 \end{figure}
 
-\begin{table}
+值得一提的是采用拉丁超立方采样的拟蒙特卡洛积分法具有相当小的波动和相当好的准确度，如图~\ref{fig:variance}(c)。和
+普通的蒙特卡洛法相比，该方法的分布和真实值相当接近，几乎没有误差。因此这实际上是一个
+非常常用的数值积分法。这两类随机方法的均值和方差如表~\ref{tbl:var}，拟蒙特卡洛积分法
+的方差达到了$10^{-11}$级别，证明了几乎没有显著的波动。
+
+
+\begin{table}[htbp]
 	\centering
 	\begin{tabular}{ccc}
 		\toprule
@@ -346,13 +365,20 @@ def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsil
 
 \section{结论}
 
-导致龙贝格积分法的实现效率相对一般的原因可能是因为这个递推过程很难被向量化优化，
-这导致了该实现没有有效利用现代硬件的优化。但是这造成的性能差异并不显著，可见
-龙贝格积分法是一种非常高效的算法。
+本次实验实现了龙贝格积分法，并将它与常用的蒙特卡洛法和拟蒙特卡洛法测试和对比，
+并简要分析了其中的原因。
+
+龙贝格积分法是一种迭代地逐次提高精度的确定性的方法。它的精度是可以通过提高迭代次数
+等方法提高。它迭代提高精度的方式是将误差的一部分补进积分值。经过实验，这种方法在
+大多数情况下都有较好的效率，并且在得出确定性结果的同时达到指定精度。
+
+导致龙贝格积分法在某些条件下相对其他两者效率一般的原因可能是因为这个递推过程很难被向量化优化，
+尤其是对被积函数求值的过程在时间上的局部性较差。这导致了该实现没有有效利用现代硬件的优化。
+但是这造成的性能差异并不显著，并且有可能通过微调算法优化。可见龙贝格积分法是一种非常高效的算法。
 
 尽管在为了达到与蒙特卡洛积分法特别是使用了拉丁超立方采样的拟蒙特卡洛积分法可以比拟的精度，
-需要较多的迭代次数从而影响了运行效率，但是考虑到拉丁超立方采样在多变量积分和图形渲染领域
-的大量应用侧面证明的高效性和准确性，这也是正常的。
+龙贝格积分法需要较多的迭代次数从而影响了运行效率，但是考虑到拉丁超立方采样在多变量积分
+和图形渲染领域的大量应用侧面证明的高效性和准确性，这是正常的。
 
 
 \clearpage
@@ -415,8 +441,198 @@ $g_b(x)$满足$g_b(x)\in [0,1]$，因此通过区间映射并替代算法~\ref{a
 
 \clearpage
 
-\section{附录：测试代码}
+\section{附录：代码}
 \label{sec:app_code}
+
+\subsection{龙贝格积分实现}
+\begin{lstlisting}[language=Python,numbers=left,style=PythonStyle,label={code:romberg},caption=龙贝格积分实现]
+import numpy as np
+
+from typing import Callable
+
+
+def integrate(f: Callable[[np.float], np.float], a: np.float, b: np.float, epsilon: np.float = 0.001,
+              n: int = 32) -> np.float:
+    r: np.ndarray = np.zeros((n + 1, n + 1), dtype=float)
+    h: np.float = b - a
+    r[0, 0] = 0.5 * h * (f(a) + f(b))
+
+    p2: int = 1
+    for k in range(1, n + 1):
+        h *= 0.5
+        p2 *= 2
+
+        r[k, 0] = 0.0
+        for i in range(1, p2, 2):
+            r[k, 0] += f(a + i * h)
+        r[k, 0] *= h
+        r[k, 0] += 0.5 * r[k - 1, 0]
+
+        p4 = 1
+        for m in range(1, k + 1):
+            p4 *= 4
+            r[k, m] = r[k, (m - 1)] + (r[k, (m - 1)] - r[k - 1, (m - 1)]) / (p4 - 1)
+
+        if k != 1 and np.abs(r[k, 0] - r[(k - 1), 0]) < epsilon:
+            return r[k, 0]
+
+    return r[n, 0]
+\end{lstlisting}
+
+\subsection{蒙特卡洛法和拟蒙特卡罗法实现}
+\begin{lstlisting}[language=Python,numbers=left,style=PythonStyle,label={code:romberg},caption=龙贝格积分实现]
+import numpy as np
+from scipy.stats import qmc
+	
+from typing import Callable
+def integrate(f: Callable, a: np.float, b: np.float, n: int = 32) -> np.float:
+    x = qmc.scale(qmc.LatinHypercube(d=1).random(n), a, b)
+    y = f(x)
+    y_mean = np.sum(y) / n
+    return (b - a) * y_mean
+
+
+def integrate(f: Callable, a: np.float, b: np.float, n: int = 32) -> np.float:
+    x = np.random.uniform(a, b, n)
+    y = f(x)
+    y_mean = np.sum(y) / n
+    return (b - a) * y_mean
+
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,numbers=left,style=PythonStyle,label={code:romberg},caption=基准测试代码]
+import timeit
+
+import numpy as np
+
+from integral.romberg import integrate as i1
+from integral.montecarlo import integrate as i2
+from integral.qmc import integrate as i3
+
+import matplotlib.pyplot as plt
+from integral.romberg import integrate2
+
+
+def f(x):
+    return np.cos(x)
+
+
+def f2(x):
+    return np.power(15 * np.power(x, 3) + 21 * np.power(x, 2) + 41 * x + 3, 1.0 / 4.0) * np.exp(-0.5 * x)
+
+
+def test_cov(ff, real, a, b):
+    val, iters, vals = integrate2(ff, a, b, 0.0001, 128)
+
+    print(val)
+    plt.plot(iters, vals, 'ro-', [0, len(iters)], [real, real], 'b')
+    plt.xlabel('Iteration')
+    plt.ylabel('Integral Value')
+    plt.show()
+
+
+def test_speed():
+    rm = []
+    mc = []
+    qmc = []
+
+    start = timeit.default_timer()
+    for i in range(1, 1000):
+        i1(f, 0, np.pi / 2, 0.0001, 128)
+    rm.append((timeit.default_timer() - start) / 1000)
+
+    start = timeit.default_timer()
+    for i in range(1, 1000):
+        i1(f2, 0, 4, 0.0001, 128)
+    rm.append((timeit.default_timer() - start) / 1000)
+
+    start = timeit.default_timer()
+    for i in range(1, 1000):
+        i2(f, 0, np.pi / 2, 8192)
+    mc.append((timeit.default_timer() - start) / 1000)
+
+    start = timeit.default_timer()
+    for i in range(1, 1000):
+        i2(f2, 0, 4, 8192)
+    mc.append((timeit.default_timer() - start) / 1000)
+
+    start = timeit.default_timer()
+    for i in range(1, 1000):
+        i3(f, 0, np.pi / 2, 8192)
+    qmc.append((timeit.default_timer() - start) / 1000)
+
+    start = timeit.default_timer()
+    for i in range(1, 1000):
+        i3(f2, 0, 4, 8192)
+    qmc.append((timeit.default_timer() - start) / 1000)
+
+    x = np.arange(2)
+    total_width, n = 0.8, 3
+    width = total_width / n
+    x = x - (total_width - width) / 2
+
+    tick_labels = ["f(x)", "g(x)"]
+    plt.bar(x, rm, width=width, label='Romberg')
+    plt.bar(x + width, mc, width=width, label='Monte Carlo')
+    plt.bar(x + 2 * width, qmc, width=width, label='Quasi-Monte Carlo')
+    plt.legend()
+    plt.xticks(x + width / 2, tick_labels)
+    plt.show()
+
+
+def test_variance():
+    iters = []
+    vals1 = []
+    vals2 = []
+    for i in range(1, 500):
+        iters.append(i)
+        vals1.append(i2(f2, 0, 4, 8192))
+        vals2.append(i3(f2, 0, 4, 8192))
+
+    print(np.mean(np.array(vals1, dtype=float)))
+    print(np.var(np.array(vals1, dtype=float)))
+    print(np.mean(np.array(vals2, dtype=float)))
+    print(np.var(np.array(vals2, dtype=float)))
+
+    real = 5.767433490695931
+    plt.plot(iters, vals1, 'ro', iters, vals2, 'go', [0, len(iters)], [real, real], 'b')
+    plt.xlabel('Iteration')
+    plt.ylabel('Integral Value')
+    plt.show()
+
+    plt.plot(iters, vals1, 'ro', [0, len(iters)], [real, real], 'b')
+    plt.xlabel('Iteration')
+    plt.ylabel('Integral Value')
+    plt.show()
+
+    plt.plot(iters, vals2, 'go', [0, len(iters)], [real, real], 'b')
+    plt.xlabel('Iteration')
+    plt.ylabel('Integral Value')
+    plt.show()
+
+test_variance()
+
+start = timeit.default_timer()
+for i in range(1, 1000):
+    i1(f2, 0, 4, 0.0001, 128)
+print(timeit.default_timer() - start)
+
+start = timeit.default_timer()
+for i in range(1, 10):
+    i2(f, 0, np.pi / 2, 8192)
+print(timeit.default_timer() - start)
+
+start = timeit.default_timer()
+for i in range(1, 1000):
+    i3(f2, 0, 4, 8192)
+print(timeit.default_timer() - start)
+
+print(i1(f, 0, np.pi / 2, 0.0001, 128),
+      i2(f, 0, np.pi / 2, 16384),
+      i3(f, 0, np.pi / 2, 8192))
+\end{lstlisting}
+
+
 \end{spacing}
 
 \end{document}
